@@ -1,0 +1,119 @@
+#PHÂN BỐ CHUẨN 1 CHIỀU
+#1. mỘT SỐ HÀM PHÂN BỐ CHUẨN
+## Hàm mật độ: dnorm(x, mean, sd)
+## Tham số x là bắt buộc, nếu k đưa vào giá trị mean và sd thì mặc định mean = 10 và sd = 1,
+##tức là xây dựng hàm mật độ của biến khi biết biên tuân theo pp chuẩn tắc
+?dnorm
+dnorm(5) #hàm mật độ f(x) = f(5) khi X ~ (0,1)
+dnorm(5, 2, 1.2) # X ~ (2, 1.2^2)
+x <- (-50:50)/12
+plot(x, dnorm(x), type = "l") # vẽ đồ thị hàm mật độ pp chuẩn tắc
+plot(x, dnorm(x), type = "l", xlim = c(-4.5, 4.5), ylim = c(0, 0.45), xlab = "Giá trị của x", ylab = "Hàm mật độ", 
+     main = "Hàm mật độ của x")
+# type = "l", "o"
+plot(x, dnorm(x), type = "l", xlim = c(-4.5, 4.5), ylim = c(0, 0.45), xlab = "Giá trị của x", ylab = "Hàm mật độ", 
+     main = "Hàm mật độ của x", col = "red")
+
+# Hàm phân phối tích lũy pnorm(p, mean, sd) = P(X < p) biết X ~ N(mean, sd^2)
+pnorm(0.9) # P(X < 0.9) biết X ~ N(0,1)
+pnorm(12, 15, 2) # = P(X < 12) biết x ~ N(15, 2^2)
+
+x = (-10:10) # x ~ N(0,1)
+plot(x, pnorm(x, 0, 1), type = "l", main = "Hàm phân phối của x", xlab = "Giá trị của x", ylab = "Hàm phân phối",
+     xlim = c(-10.5,10.5), ylim = c(0, 1.1), col = "green")
+
+# Hàm phân vị: qnorm(p, mean, sd) = a, tức là P(X < a) = p, X ~ N(mdean, sd^2)
+qnorm(0.9) # tìm a biết P(X < a) = 0.9, X ~ (0,1)
+qnorm(0.95)
+# P(X < a) = phi(a)
+
+# Hàm sinh ngẫu nhiên/ Hàm mô phỏng: rnorm(n, mean, sd). Sinh ngẫu nhiên n giá trị của biễn X ~ N(mean, sd^2)
+rnorm(5)
+# Sinh ngẫu nhiên 5 giá trị của X biết X ~ N(0,1)
+X = rnorm(5, 170, sqrt(10)) # Sinh nn 5 giá trị của X biết X ~ N(170, 10)
+set.seed(123)
+X
+mean(X)
+
+#2. Quan sát dữ liệu
+library(MASS)
+names(Cars93)
+head(Cars93) # 6 quan sát đầu tiên của bộ dữ liệu
+data = Cars93[, c("Min.Price", "Price", "Max.Price", "MPG.highway", "Horsepower", "RPM")]
+head(data)
+## Dùng tổ chức đồ
+hist(data$Price)
+par(mfrow = c(3,2)) # Khung vẽ đồ thị chia làm 3 hàng, 2 cột
+sapply(colnames(data), function(x) {
+  hist(data[[x]], main = x)
+})
+
+dev.off()
+hist(data$Price, freq = FALSE, xlim = c(0,70), ylim = c(0,.07), xlab = "Price", main = "Histogram of Price")
+
+## Kiểm tra tính chuẩn bằng QQ_plot( trực quan - vẫn nên dùng kđ shapiro.test)
+# The QQ plot consists ò a scatterplot of the paired values (x_i, x_i_h) - qqnorm
+# x-i là các giá trị đc xắp xếp 
+# qqline: đường nằm giữa Q1 và Q3 của dữ liệu đươc quan sát
+qqnorm(data$Price)
+qqline(data$Price)
+# 
+par(mfrow = c(3,2))
+sapply(colnames(data), function(x) {
+  qqnorm(data[[x]], main = x)
+  qqline(data[[x]])
+})
+shapiro.test(data$RPM)
+shapiro.test(data$Min.Price)
+shapiro.test(data$Price)
+shapiro.test(data$Max.Price)
+shapiro.test(data$MPG.highway)
+shapiro.test(data$Horsepower)
+
+sapply(colnames(data), function(x) {
+  shapiro.test(data[[x]])
+})
+sapply(colnames(data), function(x) {
+  shapiro.test(data[[x]])$p.value
+})
+
+install.packages("fBasics")
+# H0: X tuân theo pp chuẩn vs H1: X không tuân theo pp chuẩn
+# p-value > 0.05 thì chấp nhận H0
+?ksnormTest
+library(fBasics)
+# ksnormTest((data$Min.Price - mean(data$Min.Price))/ sd(data$Min.Price))
+ks.test(data$Min.Price, "pnorm")
+
+# Một số đặc trưng
+sample = rnorm(5)
+mean(sample) # GTTB - kì vọng
+var(sample)  # phương sai
+sd(sample) # đọ lệch chuẩn
+t.test(sample, mu = 2, alt = "less") # kiểm định xem mẫu đang xét có giá trị TB nhỏ hơn 2 ko?
+# H0: EX = 2 vs H1: EX < 2 (alternative hypothesis: true mean is less than 2)
+t.test(sample, mu = 2, alt = "less", conf.level = 0.99)
+
+t.test(sample, conf.level = 0.99)
+t.test(sample, conf.level = 0.99)$conf.int # H0: Ex = 0 vs H1: EX != 0
+# Do pvalue = 0.9362 > 0.01 nên chấp nhận H0
+
+sample1 = rnorm(10, 3, 1.2)
+sample2 = rnorm(15, 2.8, 1.4)
+t.test(sample1, sample2)
+# H0: Es1 = Es2 vs Es1 != Es2
+# 95 percent confidence interval: Es1 - Es2:
+#   -0.4854708  1.6697766
+
+sample1 = rnorm(10, 3, 1.2)
+sample2 = rnorm(10, 2.8, 1.4)
+dt = cbind(sample1, sample2)
+dt
+colMeans(dt) # Giá trị TB
+cov(dt) # Ma trận hiệp phương sai
+var(dt)
+var(dt[,"sample1"])
+cor(dt) # Ma trận tương quan mẫu
+cor(sample1, sample2)
+
+

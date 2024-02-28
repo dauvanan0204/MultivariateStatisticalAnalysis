@@ -1,0 +1,217 @@
+# Phần code:
+
+data = read.csv("D:\\PTDL\\pttknc\\Australian Institute of Sport.csv")
+head(data)
+summary(data)
+names(data)
+
+#a. Phương trình đường thẳng hồi quy tuyến tính của BMI theo Wt.
+lm = lm(BMI ~ Wt, data = data)
+summary(lm)
+plot(data$Wt, data$BMI, main = "Linear Regression", xlab = "Wt", ylab = "BMI")
+abline(lm, col = "red")
+
+#b. Kiểm tra phân phối chuẩn của phần dư
+shapiro.test(lm$residuals)
+## Bt: H0: lm$residuals tân theo pp chuẩn với H1: lm$residuals k tuân theo pp chuẩn
+## p-value = 0.0229 < 0.05 nên bác bỏ H0. Vậy phần dư k tuân theo pp chuẩn
+wilcox.test(lm.fit$residuals)
+
+#c. Tìm khoảng tin cậy 90% cho các hệ số hồi quy
+confint(lm , level = 0.90)
+
+#d. Kiểm tra các hệ số hồi quy
+summary(lm)
+## Giá trị p-value của Intercept là "<2e-16", tức là rất gần với 0.
+##G iá trị p-value của Wt cũng là "<2e-16", cũng rất gần với 0.
+## Do cả hai giá trị p-value đều nhỏ hơn ngưỡng 0.05, chúng ta có đủ bằng chứng để kết luận rằng cả Intercept và hệ số cho Wt đều khác không.
+
+##2
+# Sinh ngẫu nhiên dữ liệu
+set.seed(123)  # Để đảm bảo kết quả giống nhau khi chạy lại mã
+X <- rnorm(1000, mean = 158, sd = 5)
+Y <- rnorm(1000, mean = 59, sd = 3)
+#a. Viết phương trình đường thẳng hồi quy tuyến tính của X theo Y.
+
+# Fit mô hình hồi quy tuyến tính
+lm_model_random <- lm(X ~ Y)
+# In thông tin về mô hình
+summary(lm_model_random)
+# Trực quan hóa đường hồi quy trên biểu đồ phân tán
+plot(Y, X, main = "Linear Regression (Random Data)", xlab = "Y", ylab = "X")
+abline(lm_model_random, col = "blue")
+
+#b. Phần dư có phân bố chuẩn với giá trị trung bình bằng 0 không?
+# Kiểm tra phân phối chuẩn của phần dư
+shapiro.test(lm_model_random$residuals)
+## Bt: H0: lm_model_random$residuals tân theo pp chuẩn với H1: lm_model_random$residuals k tuân theo pp chuẩn
+###  p-value = 0.3992 nên chấp nhận H0. Vậy phần dư tuân theo pp chuẩn
+t.test(lm.fit$residuals, mu = 0) #kĐ về GTTB nếu chuẩn
+##  mean of x = 6.600194e-16 ~ 0
+### Vậy Phần dư có phân bố chuẩn với giá trị trung bình bằng 0
+#c. Dự đoán giá trị của X khi Y = 57.5
+predicted_value <- predict(lm_model_random, newdata = data.frame(Y = 57.5), interval = "confidence", level = 0.95)
+cat("Dự đoán giá trị của X khi Y = 57.5:", predicted_value[1], "\n")
+print(predicted_value)
+
+
+# Phần kết quả:
+
+> data = read.csv("D:\\PTDL\\pttknc\\Australian Institute of Sport.csv")
+> head(data)
+     Sex  RCC WCC   Hc   Hg Ferr   BMI   SSF XBfat   LBM    Ht   Wt
+1 female 3.96 7.5 37.5 12.3   60 20.56 109.1 19.75 63.32 195.9 78.9
+2 female 4.41 8.3 38.2 12.7   68 20.67 102.8 21.30 58.55 189.7 74.4
+3 female 4.14 5.0 36.4 11.6   21 21.86 104.6 19.88 55.36 177.8 69.1
+4 female 4.11 5.3 37.3 12.6   69 21.88 126.4 23.66 57.18 185.0 74.9
+5 female 4.45 6.8 41.5 14.0   29 18.96  80.3 17.64 53.20 184.6 64.6
+6 female 4.10 4.4 37.4 12.5   42 21.04  75.2 15.58 53.77 174.0 63.7
+> summary(data)
+     Sex                 RCC             WCC               Hc              Hg             Ferr             BMI       
+ Length:202         Min.   :3.800   Min.   : 3.300   Min.   :35.90   Min.   :11.60   Min.   :  8.00   Min.   :16.75  
+ Class :character   1st Qu.:4.372   1st Qu.: 5.900   1st Qu.:40.60   1st Qu.:13.50   1st Qu.: 41.25   1st Qu.:21.08  
+ Mode  :character   Median :4.755   Median : 6.850   Median :43.50   Median :14.70   Median : 65.50   Median :22.72  
+                    Mean   :4.719   Mean   : 7.109   Mean   :43.09   Mean   :14.57   Mean   : 76.88   Mean   :22.96  
+                    3rd Qu.:5.030   3rd Qu.: 8.275   3rd Qu.:45.58   3rd Qu.:15.57   3rd Qu.: 97.00   3rd Qu.:24.46  
+                    Max.   :6.720   Max.   :14.300   Max.   :59.70   Max.   :19.20   Max.   :234.00   Max.   :34.42  
+      SSF             XBfat             LBM               Ht              Wt        
+ Min.   : 28.00   Min.   : 5.630   Min.   : 34.36   Min.   :148.9   Min.   : 37.80  
+ 1st Qu.: 43.85   1st Qu.: 8.545   1st Qu.: 54.67   1st Qu.:174.0   1st Qu.: 66.53  
+ Median : 58.60   Median :11.650   Median : 63.03   Median :179.7   Median : 74.40  
+ Mean   : 69.02   Mean   :13.507   Mean   : 64.87   Mean   :180.1   Mean   : 75.01  
+ 3rd Qu.: 90.35   3rd Qu.:18.080   3rd Qu.: 74.75   3rd Qu.:186.2   3rd Qu.: 84.12  
+ Max.   :200.80   Max.   :35.520   Max.   :106.00   Max.   :209.4   Max.   :123.20  
+> names(data)
+ [1] "Sex"   "RCC"   "WCC"   "Hc"    "Hg"    "Ferr"  "BMI"   "SSF"   "XBfat" "LBM"   "Ht"    "Wt"   
+> #a. Phương trình đường thẳng hồi quy tuyến tính của BMI theo Wt.
+> lm = lm(BMI ~ Wt, data = data)
+> summary(lm)
+
+Call:
+lm(formula = BMI ~ Wt, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.7575 -1.1017 -0.0377  0.9502  5.5307 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 9.906039   0.591562   16.75   <2e-16 ***
+Wt          0.173979   0.007755   22.43   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.531 on 200 degrees of freedom
+Multiple R-squared:  0.7156,	Adjusted R-squared:  0.7142 
+F-statistic: 503.3 on 1 and 200 DF,  p-value: < 2.2e-16
+
+> plot(data$Wt, data$BMI, main = "Linear Regression", xlab = "Wt", ylab = "BMI")
+> abline(lm, col = "red")
+> #b. Kiểm tra phân phối chuẩn của phần dư
+> shapiro.test(lm$residuals)
+
+	Shapiro-Wilk normality test
+
+data:  lm$residuals
+W = 0.98418, p-value = 0.0229
+
+> ## Bt: H0: lm$residuals tân theo pp chuẩn với H1: lm$residuals k tuân theo pp chuẩn
+> ## p-value = 0.0229 < 0.05 nên bác bỏ H0. Vậy phần dư k tuân theo pp chuẩn
+> wilcox.test(lm.fit$residuals)
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  lm.fit$residuals
+V = 51910, p-value = 0.0002031
+alternative hypothesis: true location is not equal to 0
+
+> #c. Tìm khoảng tin cậy 90% cho các hệ số hồi quy
+> confint(lm , level = 0.90)
+                  5 %       95 %
+(Intercept) 8.9284788 10.8836001
+Wt          0.1611643  0.1867939
+> #d. Kiểm tra các hệ số hồi quy
+> summary(lm)
+
+Call:
+lm(formula = BMI ~ Wt, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.7575 -1.1017 -0.0377  0.9502  5.5307 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 9.906039   0.591562   16.75   <2e-16 ***
+Wt          0.173979   0.007755   22.43   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.531 on 200 degrees of freedom
+Multiple R-squared:  0.7156,	Adjusted R-squared:  0.7142 
+F-statistic: 503.3 on 1 and 200 DF,  p-value: < 2.2e-16
+
+> ##2
+> # Sinh ngẫu nhiên dữ liệu
+> set.seed(123)  # Để đảm bảo kết quả giống nhau khi chạy lại mã
+> X <- rnorm(1000, mean = 158, sd = 5)
+> Y <- rnorm(1000, mean = 59, sd = 3)
+> # Fit mô hình hồi quy tuyến tính
+> lm_model_random <- lm(X ~ Y)
+> # In thông tin về mô hình
+> summary(lm_model_random)
+
+Call:
+lm(formula = X ~ Y)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-13.584  -3.145  -0.030   3.226  16.192 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 149.71022    3.05638  48.983  < 2e-16 ***
+Y             0.14157    0.05162   2.742  0.00621 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 4.942 on 998 degrees of freedom
+Multiple R-squared:  0.007479,	Adjusted R-squared:  0.006484 
+F-statistic:  7.52 on 1 and 998 DF,  p-value: 0.006211
+
+> # Trực quan hóa đường hồi quy trên biểu đồ phân tán
+> plot(Y, X, main = "Linear Regression (Random Data)", xlab = "Y", ylab = "X")
+> abline(lm_model_random, col = "blue")
+> #b. Phần dư có phân bố chuẩn với giá trị trung bình bằng 0 không?
+> # Kiểm tra phân phối chuẩn của phần dư
+> shapiro.test(lm_model_random$residuals)
+
+	Shapiro-Wilk normality test
+
+data:  lm_model_random$residuals
+W = 0.99824, p-value = 0.3992
+
+> ## Bt: H0: lm_model_random$residuals tân theo pp chuẩn với H1: lm_model_random$residuals k tuân theo pp chuẩn
+> ###  p-value = 0.3992 nên chấp nhận H0. Vậy phần dư tuân theo pp chuẩn
+> t.test(lm.fit$residuals, mu = 0) #kĐ về GTTB nếu chuẩn
+
+	One Sample t-test
+
+data:  lm.fit$residuals
+t = 2.3909e-15, df = 505, p-value = 1
+alternative hypothesis: true mean is not equal to 0
+95 percent confidence interval:
+ -0.5423489  0.5423489
+sample estimates:
+   mean of x 
+6.600194e-16 
+
+> ##  mean of x = 6.600194e-16 ~ 0
+> ### Vậy Phần dư có phân bố chuẩn với giá trị trung bình bằng 0
+> #c. Dự đoán giá trị của X khi Y = 57.5
+> predicted_value <- predict(lm_model_random, newdata = data.frame(Y = 57.5), interval = "confidence", level = 0.95)
+> cat("Dự đoán giá trị của X khi Y = 57.5:", predicted_value[1], "\n")
+Dự doán giá trị của X khi Y = 57.5: 157.8503 
+> print(predicted_value)
+       fit      lwr      upr
+1 157.8503 157.5021 158.1985
