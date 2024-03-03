@@ -1,0 +1,368 @@
+## Phần 1: code
+# Cau 1:
+library(MASS)
+head(hills)
+## a)
+View(hills)
+data = hills
+
+mean(data$dist)
+sd(data$dist)
+
+mean(data$climb)
+sd(data$climb)
+
+mean(data$time)
+sd(data$time)
+
+means <- apply(hills, 2, mean)
+std <- apply(hills, 2, sd)
+print(means)
+print(std)
+## b)
+sapply(colnames(data), function(x) {
+  shapiro.test(data[[x]])
+})
+sapply(colnames(data), function(x) {
+  shapiro.test(data[[x]])$p.value
+})
+### Các biến trong bộ dữ liệu không tuân theo phân phối chuẩn.
+### Điều này được chỉ ra bởi các giá trị p-value rất thấp (dưới mức ý nghĩa thông thường 0.05), 
+
+## kđ bằng qqplot
+par(mfrow = c(2,2))
+sapply(colnames(data), function(x) {
+  qqnorm(data[[x]], main = x)
+  qqline(data[[x]])
+})
+## c)
+?pairs
+pairs(data)
+### Có một mối quan hệ dương giữa độ dài đường đua và độ cao đạt được.
+### Thời gian chạy có xu hướng giảm khi độ cao đạt được tăng.
+### Các biến không có phân phối chuẩn, nhưng có thể có mối quan hệ tuyến tính giữa độ dài đường đua và độ cao đạt được
+
+## d)
+# Fit a linear regression model
+lm_model <- lm(time ~ dist + climb, data = hills)
+### chúng ta có thể sử dụng mô hình hồi quy tuyến tính đa biến 
+### vì thời gian chạy có thể phụ thuộc vào cả độ dài đường đua và độ cao đạt được đồng thời.
+
+# Summary of the linear regression model
+summary(lm_model)
+## Mô hình hồi quy tuyến tính này có độ tin cậy cao và phù hợp với dữ liệu "hills", 
+## với cả hai biến độ dài đường đua và độ cao đạt được đều có ảnh hưởng đáng kể đến thời gian chạy.
+
+# (e) Tính giá trị trung bình và phương sai của bình phương hiệu số
+
+# Dự đoán thời gian từ mô hình hồi quy tuyến tính
+predicted_time <- predict(lm_model, hills)
+# Tính bình phương hiệu số
+squared_residuals <- (hills$time - predicted_time)^2
+# Tính giá trị trung bình và phương sai của bình phương hiệu số
+mean_squared_residuals <- mean(squared_residuals)
+var_squared_residuals <- var(squared_residuals)
+# Hiển thị kết quả
+cat("Giá trị trung bình của bình phương hiệu số:", mean_squared_residuals, "\n")
+cat("Phương sai của bình phương hiệu số:", var_squared_residuals, "\n")
+
+# Kiểm tra phân phối chuẩn của bình phương hiệu số
+qqnorm(squared_residuals, main="Residuals QQ Plot")
+qqline(squared_residuals, main="Residuals QQ Plot")
+shapiro.test(squared_residuals)
+## Vậy bình phương hiệu số không tuân theo phân phối chuẩn với p-value < 0.05
+
+
+# Câu 2:
+# Load thư viện
+library(datasets)
+
+# Đọc dữ liệu iris
+data(iris)
+# Hiển thị thông tin về cấu trúc của tập dữ liệu
+str(iris)
+dt = iris
+# Xem một số dòng đầu tiên của tập dữ liệu
+head(iris)
+# (a) Tính giá trị trung bình và độ lệch chuẩn của độ dài, độ rộng cánh hoa và đài hoa
+mean_sepal_length <- mean(iris$Sepal.Length)
+sd_sepal_length <- sd(iris$Sepal.Length)
+
+mean_sepal_width <- mean(iris$Sepal.Width)
+sd_sepal_width <- sd(iris$Sepal.Width)
+
+mean_petal_length <- mean(iris$Petal.Length)
+sd_petal_length <- sd(iris$Petal.Length)
+
+mean_petal_width <- mean(iris$Petal.Width)
+sd_petal_width <- sd(iris$Petal.Width)
+
+cat("Giá trị trung bình và độ lệch chuẩn của độ dài cánh hoa:", mean_sepal_length, "và", sd_sepal_length, "\n")
+cat("Giá trị trung bình và độ lệch chuẩn của độ rộng cánh hoa:", mean_sepal_width, "và", sd_sepal_width, "\n")
+cat("Giá trị trung bình và độ lệch chuẩn của độ dài đài hoa:", mean_petal_length, "và", sd_petal_length, "\n")
+cat("Giá trị trung bình và độ lệch chuẩn của độ rộng đài hoa:", mean_petal_width, "và", sd_petal_width, "\n")
+
+# (b) Kiểm tra phân phối chuẩn
+shapiro_sepal_length <- shapiro.test(iris$Sepal.Length)
+shapiro_sepal_width <- shapiro.test(iris$Sepal.Width)
+shapiro_petal_length <- shapiro.test(iris$Petal.Length)
+shapiro_petal_width <- shapiro.test(iris$Petal.Width)
+
+cat("Kiểm tra phân phối chuẩn cho độ dài cánh hoa:", "\n", "p-value:", shapiro_sepal_length$p.value, "\n")
+cat("Kiểm tra phân phối chuẩn cho độ rộng cánh hoa:", "\n", "p-value:", shapiro_sepal_width$p.value, "\n")
+cat("Kiểm tra phân phối chuẩn cho độ dài đài hoa:", "\n", "p-value:", shapiro_petal_length$p.value, "\n")
+cat("Kiểm tra phân phối chuẩn cho độ rộng đài hoa:", "\n", "p-value:", shapiro_petal_width$p.value, "\n")
+### Kiểm tra phân phối chuẩn cho dộ rộng cánh hoa: p-value: 0.1011543 > 0.05 nên dộ rộng cánh hoa tuân theo pp chuẩn
+### Các loại còn lại có p-value < 0.05 nên ko tuân theo pp chuẩn
+
+# (c) Vẽ đồ thị hàm mật độ và hàm phân phối
+
+# Vẽ đồ thị hàm mật độ và hàm phân phối của các biến có phân phối chuẩn trên cùng một khung hình
+par(mfrow = c(1,2))
+
+# Hàm mật độ
+hist(iris$Sepal.Width, freq = FALSE, col = "skyblue", main = "Density Function of Sepal Width", xlab = "Sepal Width", ylab = "Density")
+curve(dnorm(x, mean = mean(iris$Sepal.Width), sd = sd(iris$Sepal.Width)), add = TRUE, col = "red", lwd = 2)
+
+# Hàm phân phối
+hist(iris$Sepal.Width, freq = FALSE, col = "lightgreen", main = "Distribution Function of Sepal Width", xlab = "Sepal Width", ylab = "Distribution", xlim = c(2, 4))
+curve(pnorm(x, mean = mean(iris$Sepal.Width), sd = sd(iris$Sepal.Width)), add = TRUE, col = "blue", lwd = 2)
+
+dev.off()
+
+# (d) Kiểm tra giả thuyết về độ rộng trung bình của đài hoa
+t_test_result <- t.test(iris$Petal.Width, mu=3.5)
+t_test_result$p.value 
+if (t_test_result$p.value < 0.05) {
+  cat("Có bằng chứng thống kê để bác bỏ giả thuyết về độ rộng trung bình của đài hoa nhỏ hơn 3.5 cm.")
+} else {
+  cat("Không có bằng chứng thống kê để bác bỏ giả thuyết về độ rộng trung bình của đài hoa nhỏ hơn 3.5 cm.")
+}
+
+# (e) Tìm giá trị a sao cho xác suất để độ rộng đài hoa nhỏ hơn a là 70%
+quantile_petal_width <- quantile(iris$Petal.Width, 0.70)
+cat("Giá trị a là:", quantile_petal_width, "\n")
+
+# (f) So sánh độ rộng trung bình của đài hoa của loài setosa và versicolor
+t_test_species <- t.test(iris$Petal.Width ~ iris$Species, subset = (iris$Species == "setosa" | iris$Species == "versicolor"))
+t_test_species
+if (t_test_species$p.value < 0.01) {
+  cat("Có bằng chứng thống kê để bác bỏ giả thuyết rằng độ rộng trung bình của đài hoa của loài setosa và versicolor không khác nhau.")
+} else {
+  cat("Không có bằng chứng thống kê để bác bỏ giả thuyết rằng độ rộng trung bình của đài hoa của loài setosa và versicolor không khác nhau.")
+}
+
+
+# Phần 2: Kết quả chạy
+> # Cau 1:
+> library(MASS)
+> head(hills)
+             dist climb   time
+Greenmantle   2.5   650 16.083
+Carnethy      6.0  2500 48.350
+Craig Dunain  6.0   900 33.650
+Ben Rha       7.5   800 45.600
+Ben Lomond    8.0  3070 62.267
+Goatfell      8.0  2866 73.217
+> ## a)
+> View(hills)
+> data = hills
+> mean(data$dist)
+[1] 7.528571
+> sd(data$dist)
+[1] 5.523936
+> mean(data$climb)
+[1] 1815.314
+> sd(data$climb)
+[1] 1619.151
+> mean(data$time)
+[1] 57.87571
+> sd(data$time)
+[1] 50.04072
+> means <- apply(hills, 2, mean)
+> std <- apply(hills, 2, sd)
+> print(means)
+       dist       climb        time 
+   7.528571 1815.314286   57.875714 
+> print(std)
+       dist       climb        time 
+   5.523936 1619.150536   50.040716 
+> ## b)
+> sapply(colnames(data), function(x) {
++   shapiro.test(data[[x]])
++ })
+          dist                          climb                         time                         
+statistic 0.7490353                     0.7924533                     0.7367307                    
+p.value   2.361792e-06                  1.456375e-05                  1.45821e-06                  
+method    "Shapiro-Wilk normality test" "Shapiro-Wilk normality test" "Shapiro-Wilk normality test"
+data.name "data[[x]]"                   "data[[x]]"                   "data[[x]]"                  
+> sapply(colnames(data), function(x) {
++   shapiro.test(data[[x]])$p.value
++ })
+        dist        climb         time 
+2.361792e-06 1.456375e-05 1.458210e-06 
+> ## kđ bằng qqplot
+> par(mfrow = c(2,2))
+> sapply(colnames(data), function(x) {
++   qqnorm(data[[x]], main = x)
++   qqline(data[[x]])
++ })
+$dist
+NULL
+
+$climb
+NULL
+
+$time
+NULL
+
+> ## c)
+> ?pairs
+> pairs(data)
+> ## d)
+> # Fit a linear regression model
+> lm_model <- lm(time ~ dist + climb, data = hills)
+> # Summary of the linear regression model
+> summary(lm_model)
+
+Call:
+lm(formula = time ~ dist + climb, data = hills)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-16.215  -7.129  -1.186   2.371  65.121 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -8.992039   4.302734  -2.090   0.0447 *  
+dist         6.217956   0.601148  10.343 9.86e-12 ***
+climb        0.011048   0.002051   5.387 6.45e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 14.68 on 32 degrees of freedom
+Multiple R-squared:  0.9191,	Adjusted R-squared:  0.914 
+F-statistic: 181.7 on 2 and 32 DF,  p-value: < 2.2e-16
+
+> # Dự đoán thời gian từ mô hình hồi quy tuyến tính
+> predicted_time <- predict(lm_model, hills)
+> # Tính bình phương hiệu số
+> squared_residuals <- (hills$time - predicted_time)^2
+> # Tính giá trị trung bình và phương sai của bình phương hiệu số
+> mean_squared_residuals <- mean(squared_residuals)
+> var_squared_residuals <- var(squared_residuals)
+> # Hiển thị kết quả
+> cat("Giá trị trung bình của bình phương hiệu số:", mean_squared_residuals, "\n")
+Giá trị trung bình của bình phuong hiệu số: 196.9105 
+> cat("Phương sai của bình phương hiệu số:", var_squared_residuals, "\n")
+Phuong sai của bình phuong hiệu số: 523963.8 
+> # Kiểm tra phân phối chuẩn của bình phương hiệu số
+> qqnorm(squared_residuals, main="Residuals QQ Plot")
+> qqline(squared_residuals, main="Residuals QQ Plot")
+> shapiro.test(squared_residuals)
+
+	Shapiro-Wilk normality test
+
+data:  squared_residuals
+W = 0.27219, p-value = 5.258e-12
+
+> # Câu 2:
+> # Load thư viện
+> library(datasets)
+> # Đọc dữ liệu iris
+> data(iris)
+> # Hiển thị thông tin về cấu trúc của tập dữ liệu
+> str(iris)
+'data.frame':	150 obs. of  5 variables:
+ $ Sepal.Length: num  5.1 4.9 4.7 4.6 5 5.4 4.6 5 4.4 4.9 ...
+ $ Sepal.Width : num  3.5 3 3.2 3.1 3.6 3.9 3.4 3.4 2.9 3.1 ...
+ $ Petal.Length: num  1.4 1.4 1.3 1.5 1.4 1.7 1.4 1.5 1.4 1.5 ...
+ $ Petal.Width : num  0.2 0.2 0.2 0.2 0.2 0.4 0.3 0.2 0.2 0.1 ...
+ $ Species     : Factor w/ 3 levels "setosa","versicolor",..: 1 1 1 1 1 1 1 1 1 1 ...
+> dt = iris
+> # Xem một số dòng đầu tiên của tập dữ liệu
+> head(iris)
+  Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+1          5.1         3.5          1.4         0.2  setosa
+2          4.9         3.0          1.4         0.2  setosa
+3          4.7         3.2          1.3         0.2  setosa
+4          4.6         3.1          1.5         0.2  setosa
+5          5.0         3.6          1.4         0.2  setosa
+6          5.4         3.9          1.7         0.4  setosa
+> # (a) Tính giá trị trung bình và độ lệch chuẩn của độ dài, độ rộng cánh hoa và đài hoa
+> mean_sepal_length <- mean(iris$Sepal.Length)
+> sd_sepal_length <- sd(iris$Sepal.Length)
+> mean_sepal_width <- mean(iris$Sepal.Width)
+> sd_sepal_width <- sd(iris$Sepal.Width)
+> mean_petal_length <- mean(iris$Petal.Length)
+> sd_petal_length <- sd(iris$Petal.Length)
+> mean_petal_width <- mean(iris$Petal.Width)
+> sd_petal_width <- sd(iris$Petal.Width)
+> cat("Giá trị trung bình và độ lệch chuẩn của độ dài cánh hoa:", mean_sepal_length, "và", sd_sepal_length, "\n")
+Giá trị trung bình và dộ lệch chuẩn của dộ dài cánh hoa: 5.843333 và 0.8280661 
+> cat("Giá trị trung bình và độ lệch chuẩn của độ rộng cánh hoa:", mean_sepal_width, "và", sd_sepal_width, "\n")
+Giá trị trung bình và dộ lệch chuẩn của dộ rộng cánh hoa: 3.057333 và 0.4358663 
+> cat("Giá trị trung bình và độ lệch chuẩn của độ dài đài hoa:", mean_petal_length, "và", sd_petal_length, "\n")
+Giá trị trung bình và dộ lệch chuẩn của dộ dài dài hoa: 3.758 và 1.765298 
+> cat("Giá trị trung bình và độ lệch chuẩn của độ rộng đài hoa:", mean_petal_width, "và", sd_petal_width, "\n")
+Giá trị trung bình và dộ lệch chuẩn của dộ rộng dài hoa: 1.199333 và 0.7622377 
+> # (b) Kiểm tra phân phối chuẩn
+> shapiro_sepal_length <- shapiro.test(iris$Sepal.Length)
+> shapiro_sepal_width <- shapiro.test(iris$Sepal.Width)
+> shapiro_petal_length <- shapiro.test(iris$Petal.Length)
+> shapiro_petal_width <- shapiro.test(iris$Petal.Width)
+> cat("Kiểm tra phân phối chuẩn cho độ dài cánh hoa:", "\n", "p-value:", shapiro_sepal_length$p.value, "\n")
+Kiểm tra phân phối chuẩn cho dộ dài cánh hoa: 
+ p-value: 0.01018116 
+> cat("Kiểm tra phân phối chuẩn cho độ rộng cánh hoa:", "\n", "p-value:", shapiro_sepal_width$p.value, "\n")
+Kiểm tra phân phối chuẩn cho dộ rộng cánh hoa: 
+ p-value: 0.1011543 
+> cat("Kiểm tra phân phối chuẩn cho độ dài đài hoa:", "\n", "p-value:", shapiro_petal_length$p.value, "\n")
+Kiểm tra phân phối chuẩn cho dộ dài dài hoa: 
+ p-value: 7.412263e-10 
+> cat("Kiểm tra phân phối chuẩn cho độ rộng đài hoa:", "\n", "p-value:", shapiro_petal_width$p.value, "\n")
+Kiểm tra phân phối chuẩn cho dộ rộng dài hoa: 
+ p-value: 1.680465e-08 
+> # Vẽ đồ thị hàm mật độ và hàm phân phối của các biến có phân phối chuẩn trên cùng một khung hình
+> par(mfrow = c(1,2))
+> # Hàm mật độ
+> hist(iris$Sepal.Width, freq = FALSE, col = "skyblue", main = "Density Function of Sepal Width", xlab = "Sepal Width", ylab = "Density")
+> curve(dnorm(x, mean = mean(iris$Sepal.Width), sd = sd(iris$Sepal.Width)), add = TRUE, col = "red", lwd = 2)
+> # Hàm phân phối
+> hist(iris$Sepal.Width, freq = FALSE, col = "lightgreen", main = "Distribution Function of Sepal Width", xlab = "Sepal Width", ylab = "Distribution", xlim = c(2, 4))
+> curve(pnorm(x, mean = mean(iris$Sepal.Width), sd = sd(iris$Sepal.Width)), add = TRUE, col = "blue", lwd = 2)
+> # (d) Kiểm tra giả thuyết về độ rộng trung bình của đài hoa
+> t_test_result <- t.test(iris$Petal.Width, mu=3.5)
+> t_test_result$p.value 
+[1] 6.126126e-77
+> if (t_test_result$p.value < 0.05) {
++   cat("Có bằng chứng thống kê để bác bỏ giả thuyết về độ rộng trung bình của đài hoa nhỏ hơn 3.5 cm.")
++ } else {
++   cat("Không có bằng chứng thống kê để bác bỏ giả thuyết về độ rộng trung bình của đài hoa nhỏ hơn 3.5 cm.")
++ }
+Có bằng chứng thống kê dể bác bỏ giả thuyết về dộ rộng trung bình của dài hoa nhỏ hon 3.5 cm.
+> # (e) Tìm giá trị a sao cho xác suất để độ rộng đài hoa nhỏ hơn a là 70%
+> quantile_petal_width <- quantile(iris$Petal.Width, 0.70)
+> cat("Giá trị a là:", quantile_petal_width, "\n")
+Giá trị a là: 1.8 
+> # (f) So sánh độ rộng trung bình của đài hoa của loài setosa và versicolor
+> t_test_species <- t.test(iris$Petal.Width ~ iris$Species, subset = (iris$Species == "setosa" | iris$Species == "versicolor"))
+> t_test_species
+
+	Welch Two Sample t-test
+
+data:  iris$Petal.Width by iris$Species
+t = -34.08, df = 74.755, p-value < 2.2e-16
+alternative hypothesis: true difference in means between group setosa and group versicolor is not equal to 0
+95 percent confidence interval:
+ -1.143133 -1.016867
+sample estimates:
+    mean in group setosa mean in group versicolor 
+                   0.246                    1.326 
+
+> if (t_test_species$p.value < 0.01) {
++   cat("Có bằng chứng thống kê để bác bỏ giả thuyết rằng độ rộng trung bình của đài hoa của loài setosa và versicolor không khác nhau.")
++ } else {
++   cat("Không có bằng chứng thống kê để bác bỏ giả thuyết rằng độ rộng trung bình của đài hoa của loài setosa và versicolor không khác nhau.")
++ }
+Có bằng chứng thống kê dể bác bỏ giả thuyết rằng dộ rộng trung bình của dài hoa của loài setosa và versicolor không khác nhau._

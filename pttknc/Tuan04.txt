@@ -1,0 +1,74 @@
+# Phân bố chuẩn nhiều chiều
+#1. Sinh mẫu ngẫu nhiên nhiều chiều
+install.packages('mvtnorm')
+library(mvtnorm)
+set.seed(1)
+x = rmvnorm(5, mean = c(0,0), sigma = matrix(c(1,.8,.8,1), 2, 2))
+x
+# GTTB mẫu
+colMeans(x)
+# Ma trận hiệp phương sai
+cov(x)
+# Ma trận tương quan mẫu
+cor(x)
+# ktra pp chuẩn
+shapiro.test(x[,2])
+#2. So sánh giá trị trung bình của 2 mẫu ngẫu nhiên nhiều chiều
+install.packages('ICSNP')
+library(ICSNP)
+data("LASERI") # Phản ứng của tim mạch khi nghiên đầu
+View(LASERI)
+help(package = ICSNP)
+?LASERI
+?HotellingsT2
+
+## Test thống kê trong pp chuẩn 1 chiều
+##1. Kiểm định xem 1 gttb của 1 biến có bằng 1 giá trị cho trước ko?
+### KĐ xem gttb của biến HRT1 trong LASERI data có bằng 70 ko
+?t.test() # 1 biến có thể kđ cho 2 mẫu
+t.test(LASERI$HRT1, mu = 70) 
+### BT: H0: mu_HRT1 = 70, H1: mu_HRT1 != 70
+### KTC 95% cho GTTB của HRT1 là : 63.19398 65.71185
+### Ước lượng điểm cho HRT1 là 64.45291 
+### p-value = 8.418e-16 so sánh với mức ý nghĩa 0.05 nên bác bỏ H0.
+# Với mức ý nghĩa 5% có cơ sở để nói GTTB của HRT1 khác 70
+attach(LASERI)
+mean(HRT1) # 64.45291
+# KĐ xem HRT1 có lớn hơn 64 ko? với MYN 1%
+t.test(HRT1, mu = 64, alternative = "greater", conf.level = 0.99)
+# H0: mu_HRT1 = 64, H1: mu_HRT1 > 64
+## Do p-value = 0.2395 > 0.01 nên k đủ cơ sở bác bỏ H0
+## Với myn 1%, k có cơ sở để nói gttb của HRT1 lớn hơn 64
+# KĐ xem HRT1 có nhỏ hơn 65 ko? với MYN 10%
+t.test(HRT1, mu = 65, alternative = "less", conf.level = 0.90)
+##2. Kiểm định xem gttb của 2 mẫu có sự khác biệt ko?
+### Kiểm dịnh xem GTTB của HRT1 và HRT2 có thực sự khác nhau ko?
+t.test(HRT1, HRT2)
+# BT: H0: mu_HRT1 = mu_HRT2 vs H1: mu_HRT1 != mu_HRT2
+# do p_value < 2.2e-16 < 0.05 nên bác bỏ H0
+# Với myn 5%, có cơ sở để nói có sự khác biệt giữa gttb của HRT1 vs HRT2
+# KTC 95% cho hiệu số mu_HRT1 vs mu_HRT2: -14.99750 -11.14599
+# ƯLĐ cho HRT1 là 64.45291, ƯLĐ cho HRT2 là 77.52466
+# KĐ xem GTTB HRT1 có thực sự nhỏ hơn HRT2 ko? MYN 2%
+t.test(HRT1, HRT2, alternative = "less", conf.level = 0.98)
+
+# So sánh GTTB hai mẫu ngẫu nhiên nhiều chiều 
+# Tập trung vào 4 biến: biểu diễn dưới dạng (giá trị tr - gtrij sau) khi nghiêng
+# KĐ giá trị TB trc = sau khi nghiêng <-> Kđ GTTB của từng biến bằng 0
+## Nhịp tim TB HRT1T4
+## cung lượng tim(số lượng máu đc tim bơm 1 phút) TB: COT1T4
+## tốc độ sóng mạch TB : PWVT1T4
+names(LASERI[,25:28])
+colMeans(LASERI[,25:28])
+cov(LASERI[,25:28])
+cor(LASERI[,25:28])
+
+# Dùng hàm HotellingsT2 để kđ xem GTTB của (HRT1T4, COT1T4, SVRIT1T4, PWVT1T4)
+HotellingsT2(LASERI[,25:28], mu = c(0, 0, 0, 0))
+# BT: H0: EX = c(0,0,0,0) vs H1: EX != 0
+# (HRT1, COT1, SVRIT1, PWVT1) có thực sự khác (HRT4, COT4, SVRIT4, PWVT4) ko?
+HotellingsT2(data.frame(LASERI[,c("HRT1", "COT1", "SVRIT1", "PWVT1")]), data.frame(LASERI[c("HRT4", "COT4", "SVRIT4", "PWVT4")]))
+#3. Ktra tính pp chuẩn của biến nn nhiều chiều
+
+
+
