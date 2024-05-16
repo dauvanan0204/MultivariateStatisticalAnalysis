@@ -1,0 +1,175 @@
+# Phân bố chuẩn nhiều chiều
+#1. Sinh mẫu ngẫu nhiên nhiều chiều
+install.packages('mvtnorm')
+library(mvtnorm)
+set.seed(1)
+x = rmvnorm(5, mean = c(0,0), sigma = matrix(c(1,.8,.8,1), 2, 2))
+x
+# GTTB mẫu
+colMeans(x)
+# Ma trận hiệp phương sai
+cov(x)
+# Ma trận tương quan mẫu
+cor(x)
+# ktra pp chuẩn
+shapiro.test(x[,2])
+#2. So sánh giá trị trung bình của 2 mẫu ngẫu nhiên nhiều chiều
+install.packages('ICSNP')
+library(ICSNP)
+data("LASERI") # Phản ứng của tim mạch khi nghiên đầu
+View(LASERI)
+help(package = ICSNP)
+?LASERI
+?HotellingsT2
+
+## Test thống kê trong pp chuẩn 1 chiều
+##1. Kiểm định xem 1 gttb của 1 biến có bằng 1 giá trị cho trước ko?
+### KĐ xem gttb của biến HRT1 trong LASERI data có bằng 70 ko
+?t.test() # 1 biến có thể kđ cho 2 mẫu
+t.test(LASERI$HRT1, mu = 70) 
+### BT: H0: mu_HRT1 = 70, H1: mu_HRT1 != 70
+### KTC 95% cho GTTB của HRT1 là : 63.19398 65.71185
+### Ước lượng điểm cho HRT1 là 64.45291 
+### p-value = 8.418e-16 so sánh với mức ý nghĩa 0.05 nên bác bỏ H0.
+# Với mức ý nghĩa 5% có cơ sở để nói GTTB của HRT1 khác 70
+attach(LASERI)
+mean(HRT1) # 64.45291
+# KĐ xem HRT1 có lớn hơn 64 ko? với MYN 1%
+t.test(HRT1, mu = 64, alternative = "greater", conf.level = 0.99)
+# H0: mu_HRT1 = 64, H1: mu_HRT1 > 64
+## Do p-value = 0.2395 > 0.01 nên k đủ cơ sở bác bỏ H0
+## Với myn 1%, k có cơ sở để nói gttb của HRT1 lớn hơn 64
+# KĐ xem HRT1 có nhỏ hơn 65 ko? với MYN 10%
+t.test(HRT1, mu = 65, alternative = "less", conf.level = 0.90)
+##2. Kiểm định xem gttb của 2 mẫu có sự khác biệt ko?
+### Kiểm dịnh xem GTTB của HRT1 và HRT2 có thực sự khác nhau ko?
+t.test(HRT1, HRT2)
+# BT: H0: mu_HRT1 = mu_HRT2 vs H1: mu_HRT1 != mu_HRT2
+# do p_value < 2.2e-16 < 0.05 nên bác bỏ H0
+# Với myn 5%, có cơ sở để nói có sự khác biệt giữa gttb của HRT1 vs HRT2
+# KTC 95% cho hiệu số mu_HRT1 vs mu_HRT2: -14.99750 -11.14599
+# ƯLĐ cho HRT1 là 64.45291, ƯLĐ cho HRT2 là 77.52466
+# KĐ xem GTTB HRT1 có thực sự nhỏ hơn HRT2 ko? MYN 2%
+t.test(HRT1, HRT2, alternative = "less", conf.level = 0.98)
+
+# So sánh GTTB hai mẫu ngẫu nhiên nhiều chiều 
+# Tập trung vào 4 biến: biểu diễn dưới dạng (giá trị tr - gtrij sau) khi nghiêng
+# KĐ giá trị TB trc = sau khi nghiêng <-> Kđ GTTB của từng biến bằng 0
+## Nhịp tim TB HRT1T4
+## cung lượng tim(số lượng máu đc tim bơm 1 phút) TB: COT1T4
+## tốc độ sóng mạch TB : PWVT1T4
+names(LASERI[,25:28])
+colMeans(LASERI[,25:28])
+cov(LASERI[,25:28])
+cor(LASERI[,25:28])
+
+# Dùng hàm HotellingsT2 để kđ xem GTTB của (HRT1T4, COT1T4, SVRIT1T4, PWVT1T4)
+HotellingsT2(LASERI[,25:28], mu = c(0, 0, 0, 0))
+# BT: H0: EX = c(0,0,0,0) vs H1: EX != 0
+# (HRT1, COT1, SVRIT1, PWVT1) có thực sự khác (HRT4, COT4, SVRIT4, PWVT4) ko?
+HotellingsT2(data.frame(LASERI[,c("HRT1", "COT1", "SVRIT1", "PWVT1")]), data.frame(LASERI[c("HRT4", "COT4", "SVRIT4", "PWVT4")]))
+#3. Ktra tính pp chuẩn của biến nn nhiều chiều
+
+?pairs
+View(LASERI)
+cor(LASERI[,25:28])
+pairs(LASERI[,25:28], lwd = 1, pch = 16, cex = .5, col = "red", gap = 0, xaxt = "n", yaxt = "n"
+      #,panel = panel.smooth()
+      #, col.smooth = "blue"
+      )
+# Ma trận biểu đồ tán xạ biểu diễn các cặp điểm của 2 biến tương ứng, là quan sát trực quan về tính tương quan giữa 2 biến
+pairs(LASERI[,10:28], lwd = 1, pch = 16, cex = .5, col = "red", gap = 0, xaxt = "n", yaxt = "n"
+      #,panel = panel.smooth()
+      #, col.smooth = "blue"
+)
+# Khi số lượng biến lớn > 10 thì ngta dùng biểu đồ nhiệt để quan sát tính tương quan giữa các biến
+
+## Biểu đồ nhiệt
+install.packages('reshape2')
+library(mvtnorm)
+library(ICSNP)
+library(reshape2)
+# Vẽ biểu đồ nhiệt cho ma trận hệ số tương quan giữa các biến
+cor(LASERI[,22:28])
+cor_df = round(cor(LASERI[,22:28]), 2)
+cor_df
+melted_cor = melt(cor_df) # chuyển từ ma trận tương quan sang tương quan 2 biến theo cột
+head(melted_cor)
+melted_cor
+dim(melted_cor)
+?ggplot
+install.packages('ggplot2')
+library(ggplot2)
+# create corrrlation heatmap
+ggplot(data = melted_cor, aes(x=Var1, y=Var2, fill=value)) + 
+        geom_tile() +  # khung có màu xanh nhiều mức
+        geom_text(aes(Var2, Var1, label = value), size = 3) + # giá trị tương quan trong từng ô
+        scale_fill_gradient2(low = "blue", high = "red", limit = c(-1,1), name="Correlation") +
+        theme(axis.title.x = element_blank(),
+              axis.title.y = element_blank(),
+              panel.background = element_blank())  
+
+df_cor = round(cor(LASERI[,10:28]), 2)
+melt = melt(df_cor)
+ggplot(data = melt, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile() +   # khung có màu xanh nhiều mức
+  scale_fill_gradient2(low = "blue", high = "red", limit = c(-1,1), name="Correlation") +
+  theme(axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.background = element_blank()) 
+  
+## Phân phối chuẩn nhiều chiều
+
+candy = read.csv("D:\\PTDL\\MultivariateStatisticalAnalysis\\data\\candy.csv", header = T)
+head(candy)
+candy = candy[, -1]
+# sapply(colnames(candy), function(x) {shapiro.test(candy[[x]])})
+# Mahalanobis distance: D2i = (Yi - Yh)' S^(-1)(Yi - Yh)
+mah = mahalanobis(candy, colMeans(candy), var(candy))
+dim(candy)
+length(mah)
+mah
+qqplot(qchisq((1:nrow(candy) - 1/2) / nrow(candy), df = 6), (mah))
+abline(a = 0, b = 1, col = "red")
+shapiro.test(qnorm(pchisq(mah, 6))) # Kiểm tra tính chuẩn nhiều chiều
+# p-value = 0.9752 Tính chuẩn nhiều chiều đc chấp nhận
+# Kiểm tra tính chuẩn 1 chiều của từng biến trong 6 biến đang xét
+sapply(colnames(candy), function(x) {
+  shapiro.test(candy[[x]])$p.value
+})
+# Để kiểm tra 1 vecto nn X có tuân theo pp chuẩn k-chiều ko thì làm theo 2 bước:
+## B1: Kiểm tra tính chuẩn 1-chiều của từng biến tron X
+## Nếu tồn tại ít nhất 1 biến không chuẩn thì kết luận luôn là X k tuân theo pp chuẩn k-chiều
+## Nếu tất cả các biến của X đều tuân theo pp chuẩn 1-chiều thì thực hiện B2
+## B2: Ktra tính chuẩn nhiều chiều shapiro.test(qnorm(pchisq(mah,6))
+## B2 chính là ktra tính chuẩn của phân vị pp chuẩn tắc tương ứng với xs của pp khi bình phương xét trên dữ liệu 
+## là mah với 6 bậc tự do
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  

@@ -1,0 +1,419 @@
+####### Phần code:
+library(MASS)
+dt = Boston
+names(Boston)
+univ = lm(medv ~ crim + zn + indus + chas + nox + rm + age + dis + rad + tax + ptratio + black + lstat, data = dt)
+univ
+
+fit = univ$fitted.values # giá trị medv được tính theo mô hình
+fit
+
+resid = univ$residuals # phần dư = mqg_phần thực - fit = y - y_h
+plot(fit, resid)
+library(car)
+durbinWatsonTest(univ)
+# H0: Phần dư ko có tương quan vs H1: Phần dư có tương quan
+library(lmtest)
+dwtest(univ)
+s= summary(univ)
+s
+## a)
+# Biểu diễn hồi quy tuyến tính của biến medv theo crim + zn + indus + chas + nox + rm + 
+#                                                 age + dis + rad + tax + ptratio + black + lstat
+# Phần dư:
+#Residuals:
+#       Min      1Q  Median      3Q     Max 
+#   -15.595  -2.730  -0.518   1.777  26.199 
+## Sai số chuẩn của phần dư là: 4.745
+## Hệ số xác định R2 = 0.7406, hệ số xác định R hiệu chỉnh = 0.7338
+## 73.38% sự biến thiên của medv có thể được giải thích bởi các biến crim + zn + indus + chas + nox + rm + age + dis + rad + tax + ptratio + black + lstat
+## Test tống kê F = 108.1 với bậc tự do (13,492)
+## p-value = 2.2e-16 dùng để kiểm định bài toán: H0: Mô hình nói chung k có ý nghĩa thống kê vs H1: Mô hình nói chung có ý nghĩa thống kê
+## p-vakue = 2.2e-16 < 0.05 nên có cơ sở để bác bỏ H0 nên Mô hình nói chung có ý nghĩa thống kê
+# 2. Đưa ra pt hồi quy  medv = 3.646e+01 -1.080e-01*crim + 4.642e-02*zn + 2.056e-02*indus + 2.687e+00*chas -1.777e+01*nox + 3.810e+00*rm + 6.922e-04*age -1.476e+00*dis + 3.060e-01*rad -1.233e-02*tax -9.527e-01*ptratio + 9.312e-03*black -5.248e-01*lstat + error.
+# 3. Các hệ số trong mô hình có thực sự khác 0 k?
+## Giả sử mô hình: medv = a0 + a1*crim + a2*zn + a3*indus + a4*chas + a5*nox + a6*rm + a7*age +a8*dis + a9*rad +a10*tax + a11*ptratio + a12*black +a13*lstat
+## Có 5 bài toán kiểm định hệ số: H0: a_i = 0 vs a_i != 0 (i = 0..13)
+## Đối với hệ số a3 của biến indus, a7 của biến age, ta thấy p-value > 0.05 nên bác bỏ H0.
+## Tức là có thể nói hai biến am và carb ko có ý nghĩa trong mô hình
+## Đối với hệ số ai của các biến còn lại, ta thấy p-value < 0.05 nên chấp nhận H0.
+## Tức là có thể nói ngoại trừ hai biến indus và age thì các biến còn lại có ý nghĩa trong mô hình
+# 4. Phần dư có tuân theo pp chuẩn với gttb bằng 0 k?
+shapiro.test(univ$residuals)
+# H0: Phần dư tuân theo pp chuẩn vs H1: Phần dư ko tuân theo pp chuẩn
+## Do p-value < 2.2e-16 < 0.05 nên có cơ sở để bác bỏ H0. Có thể nói phần dư không tuân theo pp chuẩn
+## H0: GTTB của phần dư bằng 0 vs H1: GTTB của phần dư khác 0
+wilcox.test(s$residuals)
+## p-value = 0.007709 < 0.05 nên có cơ sở để bác bỏ H0. Vậy gttb != 0
+
+
+### b) Đưa ra mô hình hồi quy tuyến tính “forward” và “ backward” tốt nhất theo tiêu chuẩn AIC.
+only = lm(medv ~1, data = Boston) # Mô hình đơn giản nhất
+only
+all = lm(medv ~ ., data = Boston)
+all
+# only là mô hình đơn giản nhất mpg = a0 và all là mô hình phức tạp nhất mpg = a0 +ai*xi (i=1,2,...,10; xi là các biến còn lại trong data mtcars)
+# Phân tích theo hướng forward/backward/both
+# forward: xét mô hình only đến mô hình all
+forward = step(only, formula(all), direction = "forward", trace = 0)
+forward$anova
+summary(forward)
+
+backward = step(all, formula(all), direction = "backward", trace = 0)
+backward$anova
+
+### c) Khi phân tích “forward”, nếu biến medv được biểu diễn theo hai biến thì đó là những biến nào?
+#Coefficients:
+#  Estimate Std. Error t value Pr(>|t|)    
+#(Intercept)  36.341145   5.067492   7.171 2.73e-12 ***
+#  lstat        -0.522553   0.047424 -11.019  < 2e-16 ***
+#  rm            3.801579   0.406316   9.356  < 2e-16 ***
+# Khi phân tích "forward", nếu biến medv được biểu diễn theo hai biến, 
+#chúng sẽ là những biến đầu tiên được chọn vào mô hình theo thứ tự. 
+#Trong trường hợp này, biến medv được biểu diễn theo các biến lstat và rm.
+
+### d) Khi phân tích “backward”, kiểm định xem các hệ số trong mô hình hồi quy
+### tuyến tính thu được có thực sự khác 0 không? Phần dư có tuân theo phân
+### phối chuẩn với giá trị trung bình bằng 0 không?
+
+summary(backward)
+# Phần dư
+#Residuals:
+#     Min       1Q   Median       3Q      Max 
+#-15.5984  -2.7386  -0.5046   1.7273  26.2373
+
+# Tất cả hệ số của mô hình đều có p-value < 0.05 nên ta có thể nói tất cả các biến đều có ý nghĩa trong mô hình
+## Phần dư có tuân theo phân phối chuẩn với giá trị trung bình bằng 0 không?
+# H0: Phần dư tuân theo pp chuẩn vs H1: Phần dư ko tuân theo pp chuẩn
+shapiro.test(backward$residuals)
+# Ta có p-value < 2.2e-16 < 0.05 nên có cơ sở bác bỏ H0 . Vậy ta nói phần dư ko tuân theo pp chuẩn
+wilcox.test(backward$residuals)
+## H0: GTTB của phần dư bằng 0 vs H1: GTTB của phần dư khác 0
+# Với p-value = 0.008285 < 0.05 nên có cơ sở để bác bỏ Ho. Vậy GTTB của phần dư khác 0
+
+######## Phần chạy chương trình:
+
+ library(MASS)
+> dt = Boston
+> names(Boston)
+ [1] "crim"    "zn"      "indus"   "chas"    "nox"     "rm"      "age"     "dis"     "rad"     "tax"     "ptratio"
+[12] "black"   "lstat"   "medv"   
+> univ = lm(medv ~ crim + zn + indus + chas + nox + rm + age + dis + rad + tax + ptratio + black + lstat, data = dt)
+> univ
+
+Call:
+lm(formula = medv ~ crim + zn + indus + chas + nox + rm + age + 
+    dis + rad + tax + ptratio + black + lstat, data = dt)
+
+Coefficients:
+(Intercept)         crim           zn        indus         chas          nox           rm          age          dis  
+  3.646e+01   -1.080e-01    4.642e-02    2.056e-02    2.687e+00   -1.777e+01    3.810e+00    6.922e-04   -1.476e+00  
+        rad          tax      ptratio        black        lstat  
+  3.060e-01   -1.233e-02   -9.527e-01    9.312e-03   -5.248e-01  
+
+> fit = univ$fitted.values # giá trị medv được tính theo mô hình
+> fit
+         1          2          3          4          5          6          7          8          9         10         11 
+30.0038434 25.0255624 30.5675967 28.6070365 27.9435242 25.2562845 23.0018083 19.5359884 11.5236369 18.9202621 18.9994965 
+        12         13         14         15         16         17         18         19         20         21         22 
+21.5867957 20.9065215 19.5529028 19.2834821 19.2974832 20.5275098 16.9114013 16.1780111 18.4061360 12.5238575 17.6710367 
+        23         24         25         26         27         28         29         30         31         32         33 
+15.8328813 13.8062853 15.6783383 13.3866856 15.4639765 14.7084743 19.5473729 20.8764282 11.4551176 18.0592329  8.8110574 
+        34         35         36         37         38         39         40         41         42         43         44 
+14.2827581 13.7067589 23.8146353 22.3419371 23.1089114 22.9150261 31.3576257 34.2151023 28.0205641 25.2038663 24.6097927 
+        45         46         47         48         49         50         51         52         53         54         55 
+22.9414918 22.0966982 20.4232003 18.0365509  9.1065538 17.2060775 21.2815254 23.9722228 27.6558508 24.0490181 15.3618477 
+        56         57         58         59         60         61         62         63         64         65         66 
+31.1526495 24.8568698 33.1091981 21.7753799 21.0849356 17.8725804 18.5111021 23.9874286 22.5540887 23.3730864 30.3614836 
+        67         68         69         70         71         72         73         74         75         76         77 
+25.5305651 21.1133856 17.4215379 20.7848363 25.2014886 21.7426577 24.5574496 24.0429571 25.5049972 23.9669302 22.9454540 
+        78         79         80         81         82         83         84         85         86         87         88 
+23.3569982 21.2619827 22.4281737 28.4057697 26.9948609 26.0357630 25.0587348 24.7845667 27.7904920 22.1685342 25.8927642 
+        89         90         91         92         93         94         95         96         97         98         99 
+30.6746183 30.8311062 27.1190194 27.4126673 28.9412276 29.0810555 27.0397736 28.6245995 24.7274498 35.7815952 35.1145459 
+       100        101        102        103        104        105        106        107        108        109        110 
+32.2510280 24.5802202 25.5941347 19.7901368 20.3116713 21.4348259 18.5399401 17.1875599 20.7504903 22.6482911 19.7720367 
+       111        112        113        114        115        116        117        118        119        120        121 
+20.6496586 26.5258674 20.7732364 20.7154831 25.1720888 20.4302559 23.3772463 23.6904326 20.3357836 20.7918087 21.9163207 
+       122        123        124        125        126        127        128        129        130        131        132 
+22.4710778 20.5573856 16.3666198 20.5609982 22.4817845 14.6170663 15.1787668 18.9386859 14.0557329 20.0352740 19.4101340 
+       133        134        135        136        137        138        139        140        141        142        143 
+20.0619157 15.7580767 13.2564524 17.2627773 15.8784188 19.3616395 13.8148390 16.4488147 13.5714193  3.9888551 14.5949548 
+       144        145        146        147        148        149        150        151        152        153        154 
+12.1488148  8.7282236 12.0358534 15.8208206  8.5149902  9.7184414 14.8045137 20.8385815 18.3010117 20.1228256 17.2860189 
+       155        156        157        158        159        160        161        162        163        164        165 
+22.3660023 20.1037592 13.6212589 33.2598270 29.0301727 25.5675277 32.7082767 36.7746701 40.5576584 41.8472817 24.7886738 
+       166        167        168        169        170        171        172        173        174        175        176 
+25.3788924 37.2034745 23.0874875 26.4027396 26.6538211 22.5551466 24.2908281 22.9765722 29.0719431 26.5219434 30.7220906 
+       177        178        179        180        181        182        183        184        185        186        187 
+25.6166931 29.1374098 31.4357197 32.9223157 34.7244046 27.7655211 33.8878732 30.9923804 22.7182001 24.7664781 35.8849723 
+       188        189        190        191        192        193        194        195        196        197        198 
+33.4247672 32.4119915 34.5150995 30.7610949 30.2893414 32.9191871 32.1126077 31.5587100 40.8455572 36.1277008 32.6692081 
+       199        200        201        202        203        204        205        206        207        208        209 
+34.7046912 30.0934516 30.6439391 29.2871950 37.0714839 42.0319312 43.1894984 22.6903480 23.6828471 17.8544721 23.4942899 
+       210        211        212        213        214        215        216        217        218        219        220 
+17.0058772 22.3925110 17.0604275 22.7389292 25.2194255 11.1191674 24.5104915 26.6033477 28.3551871 24.9152546 29.6865277 
+       221        222        223        224        225        226        227        228        229        230        231 
+33.1841975 23.7745666 32.1405196 29.7458199 38.3710245 39.8146187 37.5860575 32.3995325 35.4566524 31.2341151 24.4844923 
+       232        233        234        235        236        237        238        239        240        241        242 
+33.2883729 38.0481048 37.1632863 31.7138352 25.2670557 30.1001074 32.7198716 28.4271706 28.4294068 27.2937594 23.7426248 
+       243        244        245        246        247        248        249        250        251        252        253 
+24.1200789 27.4020841 16.3285756 13.3989126 20.0163878 19.8618443 21.2883131 24.0798915 24.2063355 25.0421582 24.9196401 
+       254        255        256        257        258        259        260        261        262        263        264 
+29.9456337 23.9722832 21.6958089 37.5110924 43.3023904 36.4836142 34.9898859 34.8121151 37.1663133 40.9892850 34.4463409 
+       265        266        267        268        269        270        271        272        273        274        275 
+35.8339755 28.2457430 31.2267359 40.8395575 39.3179239 25.7081791 22.3029553 27.2034097 28.5116947 35.4767660 36.1063916 
+       276        277        278        279        280        281        282        283        284        285        286 
+33.7966827 35.6108586 34.8399338 30.3519266 35.3098070 38.7975697 34.3312319 40.3396307 44.6730834 31.5968909 27.3565923 
+       287        288        289        290        291        292        293        294        295        296        297 
+20.1017415 27.0420667 27.2136458 26.9139584 33.4356331 34.4034963 31.8333982 25.8178324 24.4298235 28.4576434 27.3626700 
+       298        299        300        301        302        303        304        305        306        307        308 
+19.5392876 29.1130984 31.9105461 30.7715945 28.9427587 28.8819102 32.7988723 33.2090546 30.7683179 35.5622686 32.7090512 
+       309        310        311        312        313        314        315        316        317        318        319 
+28.6424424 23.5896583 18.5426690 26.8788984 23.2813398 25.5458025 25.4812006 20.5390990 17.6157257 18.3758169 24.2907028 
+       320        321        322        323        324        325        326        327        328        329        330 
+21.3252904 24.8868224 24.8693728 22.8695245 19.4512379 25.1178340 24.6678691 23.6807618 19.3408962 21.1741811 24.2524907 
+       331        332        333        334        335        336        337        338        339        340        341 
+21.5926089 19.9844661 23.3388800 22.1406069 21.5550993 20.6187291 20.1609718 19.2849039 22.1667232 21.2496577 21.4293931 
+       342        343        344        345        346        347        348        349        350        351        352 
+30.3278880 22.0473498 27.7064791 28.5479412 16.5450112 14.7835964 25.2738008 27.5420512 22.1483756 20.4594409 20.5460542 
+       353        354        355        356        357        358        359        360        361        362        363 
+16.8806383 25.4025351 14.3248663 16.5948846 19.6370469 22.7180661 22.2021889 19.2054806 22.6661611 18.9319262 18.2284680 
+       364        365        366        367        368        369        370        371        372        373        374 
+20.2315081 37.4944739 14.2819073 15.5428625 10.8316232 23.8007290 32.6440736 34.6068404 24.9433133 25.9998091  6.1263250 
+       375        376        377        378        379        380        381        382        383        384        385 
+ 0.7777981 25.3071306 17.7406106 20.2327441 15.8333130 16.8351259 14.3699483 18.4768283 13.4276828 13.0617751  3.2791812 
+       386        387        388        389        390        391        392        393        394        395        396 
+ 8.0602217  6.1284220  5.6186481  6.4519857 14.2076474 17.2122518 17.2988727  9.8911664 20.2212419 17.9418118 20.3044578 
+       397        398        399        400        401        402        403        404        405        406        407 
+19.2955908 16.3363278  6.5516232 10.8901678 11.8814587 17.8117451 18.2612659 12.9794878  7.3781636  8.2111586  8.0662619 
+       408        409        410        411        412        413        414        415        416        417        418 
+19.9829479 13.7075637 19.8526845 15.2230830 16.9607198  1.7185181 11.8057839 -4.2813107  9.5837674 13.3666081  6.8956236 
+       419        420        421        422        423        424        425        426        427        428        429 
+ 6.1477985 14.6066179 19.6000267 18.1242748 18.5217713 13.1752861 14.6261762  9.9237498 16.3459065 14.0751943 14.2575624 
+       430        431        432        433        434        435        436        437        438        439        440 
+13.0423479 18.1595569 18.6955435 21.5272830 17.0314186 15.9609044 13.3614161 14.5207938  8.8197601  4.8675110 13.0659131 
+       441        442        443        444        445        446        447        448        449        450        451 
+12.7060970 17.2955806 18.7404850 18.0590103 11.5147468 11.9740036 17.6834462 18.1269524 17.5183465 17.2274251 16.5227163 
+       452        453        454        455        456        457        458        459        460        461        462 
+19.4129110 18.5821524 22.4894479 15.2800013 15.8208934 12.6872558 12.8763379 17.1866853 18.5124761 19.0486053 20.1720893 
+       463        464        465        466        467        468        469        470        471        472        473 
+19.7740732 22.4294077 20.3191185 17.8861625 14.3747852 16.9477685 16.9840576 18.5883840 20.1671944 22.9771803 22.4558073 
+       474        475        476        477        478        479        480        481        482        483        484 
+25.5782463 16.3914763 16.1114628 20.5348160 11.5427274 19.2049630 21.8627639 23.4687887 27.0988732 28.5699430 21.0839878 
+       485        486        487        488        489        490        491        492        493        494        495 
+19.4551620 22.2222591 19.6559196 21.3253610 11.8558372  8.2238669  3.6639967 13.7590854 15.9311855 20.6266205 20.6124941 
+       496        497        498        499        500        501        502        503        504        505        506 
+16.8854196 14.0132079 19.1085414 21.2980517 18.4549884 20.4687085 23.5333405 22.3757189 27.6274261 26.1279668 22.3442123 
+> resid = univ$residuals # phần dư = mqg_phần thực - fit = y - y_h
+> plot(fit, resid)
+> library(car)
+> durbinWatsonTest(univ)
+ lag Autocorrelation D-W Statistic p-value
+   1       0.4542626      1.078375       0
+ Alternative hypothesis: rho != 0
+> # H0: Phần dư ko có tương quan vs H1: Phần dư có tương quan
+> library(lmtest)
+> dwtest(univ)
+
+	Durbin-Watson test
+
+data:  univ
+DW = 1.0784, p-value < 2.2e-16
+alternative hypothesis: true autocorrelation is greater than 0
+
+> s= summary(univ)
+> s
+
+Call:
+lm(formula = medv ~ crim + zn + indus + chas + nox + rm + age + 
+    dis + rad + tax + ptratio + black + lstat, data = dt)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-15.595  -2.730  -0.518   1.777  26.199 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  3.646e+01  5.103e+00   7.144 3.28e-12 ***
+crim        -1.080e-01  3.286e-02  -3.287 0.001087 ** 
+zn           4.642e-02  1.373e-02   3.382 0.000778 ***
+indus        2.056e-02  6.150e-02   0.334 0.738288    
+chas         2.687e+00  8.616e-01   3.118 0.001925 ** 
+nox         -1.777e+01  3.820e+00  -4.651 4.25e-06 ***
+rm           3.810e+00  4.179e-01   9.116  < 2e-16 ***
+age          6.922e-04  1.321e-02   0.052 0.958229    
+dis         -1.476e+00  1.995e-01  -7.398 6.01e-13 ***
+rad          3.060e-01  6.635e-02   4.613 5.07e-06 ***
+tax         -1.233e-02  3.760e-03  -3.280 0.001112 ** 
+ptratio     -9.527e-01  1.308e-01  -7.283 1.31e-12 ***
+black        9.312e-03  2.686e-03   3.467 0.000573 ***
+lstat       -5.248e-01  5.072e-02 -10.347  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 4.745 on 492 degrees of freedom
+Multiple R-squared:  0.7406,	Adjusted R-squared:  0.7338 
+F-statistic: 108.1 on 13 and 492 DF,  p-value: < 2.2e-16
+
+> ## p-vakue = 2.2e-16 < 0.05 nên có cơ sở để bác bỏ H0 nên Mô hình nói chung có ý nghĩa thống kê
+> # 2. Đưa ra pt hồi quy  medv = 3.646e+01 -1.080e-01*crim + 4.642e-02*zn + 2.056e-02*indus + 2.687e+00*chas -1.777e+01*nox + 3.810e+00*rm + 6.922e-04*age -1.476e+00*dis + 3.060e-01*rad -1.233e-02*tax -9.527e-01*ptratio + 9.312e-03*black -5.248e-01*lstat + error.
+> # 3. Các hệ số trong mô hình có thực sự khác 0 k?
+> ## Giả sử mô hình: medv = a0 + a1*crim + a2*zn + a3*indus + a4*chas + a5*nox + a6*rm + a7*age +a8*dis + a9*rad +a10*tax + a11*ptratio + a12*black +a13*lstat
+> ## Có 5 bài toán kiểm định hệ số: H0: a_i = 0 vs a_i != 0 (i = 0..13)
+> ## Đối với hệ số a3 của biến indus, a7 của biến age, ta thấy p-value > 0.05 nên bác bỏ H0.
+> ## Tức là có thể nói hai biến am và carb ko có ý nghĩa trong mô hình
+> ## Đối với hệ số ai của các biến còn lại, ta thấy p-value < 0.05 nên chấp nhận H0.
+> ## Tức là có thể nói ngoại trừ hai biến indus và age thì các biến còn lại có ý nghĩa trong mô hình
+> # 4. Phần dư có tuân theo pp chuẩn với gttb bằng 0 k?
+> shapiro.test(univ$residuals)
+
+	Shapiro-Wilk normality test
+
+data:  univ$residuals
+W = 0.90138, p-value < 2.2e-16
+
+> # H0: Phần dư tuân theo pp chuẩn vs H1: Phần dư ko tuân theo pp chuẩn
+> ## Do p-value < 2.2e-16 < 0.05 nên có cơ sở để bác bỏ H0. Có thể nói phần dư không tuân theo pp chuẩn
+> ## H0: GTTB của phần dư bằng 0 vs H1: GTTB của phần dư khác 0
+> wilcox.test(s$residuals)
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  s$residuals
+V = 55367, p-value = 0.007709
+alternative hypothesis: true location is not equal to 0
+
+> ### b) Đưa ra mô hình hồi quy tuyến tính “forward” và “ backward” tốt nhất theo tiêu chuẩn AIC.
+> only = lm(medv ~1, data = Boston) # Mô hình đơn giản nhất
+> only
+
+Call:
+lm(formula = medv ~ 1, data = Boston)
+
+Coefficients:
+(Intercept)  
+      22.53  
+
+> all = lm(medv ~ ., data = Boston)
+> all
+
+Call:
+lm(formula = medv ~ ., data = Boston)
+
+Coefficients:
+(Intercept)         crim           zn        indus         chas          nox           rm          age          dis  
+  3.646e+01   -1.080e-01    4.642e-02    2.056e-02    2.687e+00   -1.777e+01    3.810e+00    6.922e-04   -1.476e+00  
+        rad          tax      ptratio        black        lstat  
+  3.060e-01   -1.233e-02   -9.527e-01    9.312e-03   -5.248e-01  
+
+> # only là mô hình đơn giản nhất mpg = a0 và all là mô hình phức tạp nhất mpg = a0 +ai*xi (i=1,2,...,10; xi là các biến còn lại trong data mtcars)
+> # Phân tích theo hướng forward/backward/both
+> # forward: xét mô hình only đến mô hình all
+> forward = step(only, formula(all), direction = "forward", trace = 0)
+> forward$anova
+        Step Df    Deviance Resid. Df Resid. Dev      AIC
+1            NA          NA       505   42716.30 2246.514
+2    + lstat -1 23243.91400       504   19472.38 1851.009
+3       + rm -1  4033.07222       503   15439.31 1735.577
+4  + ptratio -1  1711.32389       502   13727.99 1678.131
+5      + dis -1   499.07761       501   13228.91 1661.393
+6      + nox -1   759.56355       500   12469.34 1633.473
+7     + chas -1   328.27141       499   12141.07 1621.973
+8    + black -1   272.83713       498   11868.24 1612.473
+9       + zn -1   189.93614       497   11678.30 1606.309
+10    + crim -1    94.71193       496   11583.59 1604.189
+11     + rad -1   228.60431       495   11354.98 1596.103
+12     + tax -1   273.61928       494   11081.36 1585.761
+> summary(forward)
+
+Call:
+lm(formula = medv ~ lstat + rm + ptratio + dis + nox + chas + 
+    black + zn + crim + rad + tax, data = Boston)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-15.5984  -2.7386  -0.5046   1.7273  26.2373 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  36.341145   5.067492   7.171 2.73e-12 ***
+lstat        -0.522553   0.047424 -11.019  < 2e-16 ***
+rm            3.801579   0.406316   9.356  < 2e-16 ***
+ptratio      -0.946525   0.129066  -7.334 9.24e-13 ***
+dis          -1.492711   0.185731  -8.037 6.84e-15 ***
+nox         -17.376023   3.535243  -4.915 1.21e-06 ***
+chas          2.718716   0.854240   3.183 0.001551 ** 
+black         0.009291   0.002674   3.475 0.000557 ***
+zn            0.045845   0.013523   3.390 0.000754 ***
+crim         -0.108413   0.032779  -3.307 0.001010 ** 
+rad           0.299608   0.063402   4.726 3.00e-06 ***
+tax          -0.011778   0.003372  -3.493 0.000521 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 4.736 on 494 degrees of freedom
+Multiple R-squared:  0.7406,	Adjusted R-squared:  0.7348 
+F-statistic: 128.2 on 11 and 494 DF,  p-value: < 2.2e-16
+
+> backward = step(all, formula(all), direction = "backward", trace = 0)
+> backward$anova
+     Step Df   Deviance Resid. Df Resid. Dev      AIC
+1         NA         NA       492   11078.78 1589.643
+2   - age  1 0.06183435       493   11078.85 1587.646
+3 - indus  1 2.51754013       494   11081.36 1585.761
+> summary(backward)
+
+Call:
+lm(formula = medv ~ crim + zn + chas + nox + rm + dis + rad + 
+    tax + ptratio + black + lstat, data = Boston)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-15.5984  -2.7386  -0.5046   1.7273  26.2373 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  36.341145   5.067492   7.171 2.73e-12 ***
+crim         -0.108413   0.032779  -3.307 0.001010 ** 
+zn            0.045845   0.013523   3.390 0.000754 ***
+chas          2.718716   0.854240   3.183 0.001551 ** 
+nox         -17.376023   3.535243  -4.915 1.21e-06 ***
+rm            3.801579   0.406316   9.356  < 2e-16 ***
+dis          -1.492711   0.185731  -8.037 6.84e-15 ***
+rad           0.299608   0.063402   4.726 3.00e-06 ***
+tax          -0.011778   0.003372  -3.493 0.000521 ***
+ptratio      -0.946525   0.129066  -7.334 9.24e-13 ***
+black         0.009291   0.002674   3.475 0.000557 ***
+lstat        -0.522553   0.047424 -11.019  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 4.736 on 494 degrees of freedom
+Multiple R-squared:  0.7406,	Adjusted R-squared:  0.7348 
+F-statistic: 128.2 on 11 and 494 DF,  p-value: < 2.2e-16
+
+> # Tất cả hệ số của mô hình đều có p-value < 0.05 nên ta có thể nói tất cả các biến đều có ý nghĩa trong mô hình
+> ## Phần dư có tuân theo phân phối chuẩn với giá trị trung bình bằng 0 không?
+> # H0: Phần dư tuân theo pp chuẩn vs H1: Phần dư ko tuân theo pp chuẩn
+> shapiro.test(backward$residuals)
+
+	Shapiro-Wilk normality test
+
+data:  backward$residuals
+W = 0.90131, p-value < 2.2e-16
+
+> # Ta có p-value < 2.2e-16 < 0.05 nên có cơ sở bác bỏ H0 . Vậy ta nói phần dư ko tuân theo pp chuẩn
+> wilcox.test(backward$residuals)
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  backward$residuals
+V = 55447, p-value = 0.008285
+alternative hypothesis: true location is not equal to 0
+
+> 
+> ## H0: GTTB của phần dư bằng 0 vs H1: GTTB của phần dư khác 0
+> ## H0: GTTB của phần dư bằng 0 vs H1: GTTB của phần dư khác 0
+> # Với p-value = 0.008285 < 0.05 nên có cơ sở để bác bỏ Ho. Vậy GTTB của phần dư khác 0
+> 

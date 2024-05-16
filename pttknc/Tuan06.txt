@@ -1,0 +1,77 @@
+## Data1: Khuyến nghị phân bổ đầu tư
+invest = read.table('D:\\PTDL\\MultivariateStatisticalAnalysis\\data\\investment.txt',header = T)
+head(invest)
+# Đặt tên các hàng chính là "Manager"
+# Xóa cột "Manager" ra khỏi dữ liệu
+# Đối với bộ dữ liệu mà các biến có cùng thang đo, có thể PT thành phần chính trên ma trận hiệp phương sai
+# Đối với bộ dữ liệu mà các biến có cùng thang đo, có thể PT thành phần chính trên ma trận tương quan
+rownames(invest) = invest[,1]
+invest <- invest[,-1] # bỏ cột Manager
+head(invest)
+pc <- princomp(invest)
+summary(pc) # Tóm tắt kết quả
+#> summary(pc)
+# Importance of components:
+#                         Comp.1    Comp.2    Comp.3     Comp.4     Comp.5    Comp.6      Comp.7       Comp.8
+# Standard deviation     14.976263 7.4764087 6.3540720 3.44766464 2.64881614 2.2348600 1.464974785 0.2528154516
+# Proportion of Variance  0.646986 0.1612404 0.1164641 0.03428767 0.02023912 0.0144075 0.006190821 0.0001843721
+# Cumulative Proportion   0.646986 0.8082264 0.9246905 0.95897819 0.97921731 0.9936248 0.999815628 1.0000000000
+
+# Hàng đầu tiên là độ lệch tiêu chuẩn của các thành phần chính(Standard deviation)
+# Proportion of Variance: Tỷ lệ biến sai tổng cộng : D(Y_i) / sum(D(Y_j)) 
+# Cumulative Proportion dùng để tìm ra số TPC cần thiết khi đề bài yêu cầu hiểu ?% thông tin về bộ dữ liệu ba đầu
+## VD cần hiểu 95% thì cần 4 TPC
+pc <- princomp(covmat = cov(invest)) # Phân tích TPC trên ma trận tương quan mẫu
+summary(pc)
+pc$sdev # Độ lệch tiêu chuẩn của các TPC khi phân tích trên ma trận hiệp phương sai
+(pc$sdev)^2 # Phương sai của TPC: D(Y_i), với Y_i là TPC thứ i: Y_i = e_i'X
+eigen(cov(invest))$values # Giá trị riêng của ma trận hiệp phương sai của invest
+# D(Y_i) = lambda_i    : (pc$sdev)^2 = eigen(cov(invest))$values
+pc$loadings # các hệ số tải l_ij
+# Dựa vào ma trận hệ số tải trọng, biểu diễn các TPC theo biến ban đầu
+# PC1 = 0.706*S.US + 0.114*B.US - 0.109*B.Non.US - 0.686*A.native
+# Mỗi cột hệ số tải chính là vecsto riêng tương ứng của ma trận hiệp phương sai
+eigen(cov(invest))$vecto[,1]
+
+pcacor = princomp(invest, cor = T)
+# Nếu các biến trong bộ dữ liệu k cùng thang đo, ta sẽ phân tích TPC trên ma trận tương quan mẫu
+summary(pcacor)
+# Standard deviation^2 = D(Y_i) = lambda_i là giá trị riêng thứ i của ma trận tương quan
+# Để có đc 85% thông tin về bộ dữ liệu ban đầu cần 5 TPC. Tìm sai số.
+# Sai số = (lambda_6 + lambda_7 + lambda_8) / sum(lambda) = 1 - 0.86364897
+100*(1 - 0.86364897)
+pc <- princomp(invest)
+screeplot(pc, col = "red", pch = 16,
+          type = "lines", cex = 2, lwd = 2, main = "")
+
+pc <- princomp(invest)
+biplot(pc, col = c(2, 3), cex = c(.75, 1.5),
+       xlim = c(-.45, .45),
+       xlab = "First principal component",
+       ylab = "Second principal component",
+       main = "Biplot for investment allocations")
+
+
+hemangioma = read.table('D:\\PTDL\\MultivariateStatisticalAnalysis\\data\\hemangioma.txt',header = T)
+head(hemangioma)
+factanal(hemangioma, factors = 3) # Phân tích với 3 nhân tố
+# X_i = l_i1 * F1 + l_i2 * F2 + l_i3 * F3 + psi 
+# psi đgl nhiễu
+# (1) Dựa vào ma trận tải trọng có thể biểu diễn các biến X_i theo các nhân tố F_1, F_2, F_3
+# (2) Có thế chỉ ra các biến X_i bị chi phối bởi những nhân tố nào?/ Mỗi nhân tố F1 F2 F3 chi phối những biến nào?
+# Xét 1 bài toán kiểm định: H0: 3 nhân tố là đủ vs H1: 3 nhân tố là ko đủ
+# Do p_value = 0.33 > 0.05 nên chấp nhận H0.
+# KL: Sd 3 nhân tố là đủ
+
+
+
+
+
+
+
+
+
+
+
+
+

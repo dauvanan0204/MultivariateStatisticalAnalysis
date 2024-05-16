@@ -1,0 +1,84 @@
+univ = lm(formula = mpg ~ cyl + wt + am + carb, data = mtcars)
+fit = univ$fitted.values # giá trị mqg được tính theo mô hình
+names(univ)
+fit
+resid = univ$residuals # phần dư = mqg_phần thực - fit = y - y_h
+plot(fit, resid)
+library(car)
+durbinWatsonTest(univ)
+# H0: Phần dư ko có tương quan vs H1: Phần dư có tương quan
+library(lmtest)
+dwtest(univ)
+s = summary(univ)
+s
+# 1.Giải thích các kết quả thu được 
+## Đang biểu diễn hồi quy tuyến tính của biến mpg theo các biến cyl, wt, am, carb
+## Phần dư     Min      1Q  Median      3Q     Max 
+##         -4.5451 -1.2184 -0.3739  1.4699  5.3528 
+## Hệ số : ước lượng sai số chuản, test thống kê T(t-value) và pvalue(Pr(>|t|))
+## Sai số chuẩn của phần dư là: 2.5
+## Hệ số xác định R2 = 0.8502, hệ số xác định R hiệu chỉnh = 0.828
+## 82.8% sự biến thiên của mpg có thể được giải thích bởi các biến cyl, wt, am, carb
+## Test tống kê F = 38.3 với bậc tự do (4,27)
+## p-value = 9.255e-11 dùng để kiểm định bài toán: H0: Mô hình nói chung k có ý nghĩa thống kê vs H1: Mô hình nói chung có ý nghĩa thống kê
+# 2. Đưa ra pt hồi quy  mpg =36.85−1.20cyl−2.48wt+1.78am−0.75carb+error.
+# 3. Các hệ số trong mô hình có thực sự khác 0 k?
+## Giả sử mô hình: mpg = a0 + a1*cyl + a2*wt + a3*am + a4*carb
+## Có 5 bài toán kiểm định hệ số: H0: a_i = 0 vs a_i != 0 (i = 0,1,2,3,4)
+## Đối với hệ số a3 của biến am, a4 của biến carb, ta thấy p-value > 0.05 nên chấp nhậ H0.
+## Tức là có thể nói hai biến am và carb ko có ý nghĩa trong mô hình
+## Đối với hệ số a0 của biến cyl, a1 của biến wt, ta thấy p-value < 0.05 nên chấp nhậ H0.
+## Tức là có thể nói hai biến cyl và wt có ý nghĩa trong mô hình
+# 4. Phần dư có tuân theo pp chuẩn với gttb bằng 0 k?
+shapiro.test(s$residuals)
+# H0: Phần dư tuân theo pp chuẩn vs H1: Phần dư ko tuân theo pp chuẩn
+## Do p-value = 0.7379 > 0.05 nên chấp nhận H0. Có thể nói phần dư tuân theo pp chuẩn
+t.test(s$residuals)
+# # H0: GTTB của phần dư bằng  vs H1: GTTB của phần dư khác 0
+lm(formula = mpg ~ cyl + wt -1, data = mtcars)
+summary(lm(mpg ~ cyl + wt, data = mtcars))
+# Một mô hình theo bao nhiêu biến là phù hợp nhất tùy theo tiêu chuẩn đang xét. ở đây, giới thiệu về việc chọn mô hình theo chuẩn AIC
+?step
+names(mtcars)
+# Xây dựng mô hình đơn giản và mô hình phức tạp nhất để tìm ra mô hình mpg theo các biến phù hợp nhất theo tiêu chuẩn AIC
+attach(mtcars) # tách dữ liệu
+only = lm(mpg ~1, data = mtcars) # Mô hình đơn giản nhất
+only
+all = lm(mpg ~ ., data = mtcars)
+all
+# only là mô hình đơn giản nhất mpg = a0 và all là mô hình phức tạp nhất mpg = a0 +ai*xi (i=1,2,...,10; xi là các biến còn lại trong data mtcars)
+# Phân tích theo hướng forward/backward/both
+# forward: xét mô hình only đến mô hình all
+forward = step(only, formula(all), direction = "forward", trace = 0)
+forward$anova
+summary(forward)
+# Bắt đầu xét từ  mô hình only: mpg = a0
+# Thêm 1 trong 10 biến vào mô hình only đc mô hình có dạng: y = a0 + a1*xi (i = 1..10)
+# trong 10 mô hình này chọn ra mô hình có AIC nhỏ nhất. Ở đây, thu đc mô hình: mpg = a0 +a1*wt với AIC = 115.94
+# Thêm 1 trong 9 biến vào mô hình mpg = a0 +a1*wt đc mô hình có dạng: y = a0 + a1*wt + a2*Xj (j = 2..10)
+# Trong 9 mô hình này, chọn ra mô hình có AIC nhỏ nhất, Ở dây thu đc mô hình mpg = a0 + a1*wt + a2*cyl với AIC = 73.22
+# Tiếp tục thực hiện đến khi chỉ số AIC thu đc ko giảm nữa thì dừng lại
+backward = step(all, formula(all), direction = "backward", trace = 0)
+backward$anova
+step(only, formula(all), direction = "both", trace = 0)$anova
+predict(forward, newdata = data.frame(wt = 2, cyl = 3, hp = 5))
+# Đưa ra dự đoán về mpg theo mô hình đã xây dựng cho dữ liệu đầu vào là wt = 2, cyl = 3, hp = 5
+forward$coefficients %*% (c(1,2,3,5))
+predict(forward, newdata = data.frame(wt = c(2,3), cyl = c(3,6), hp = c(5,10)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,110 @@
+univ.mpg <- aov(mpg ~ cyl + disp + am + carb , data = mtcars)
+summary((univ.mpg))
+# p_value xét Ho: mpg và X_i độc lập và H1: mpg và X_i phụ thuộc
+attach(mtcars)
+cor(mpg, cyl)
+cor(mpg, disp)
+cor(mpg, carb)
+cor(mpg, am)
+univ.hp <- lm( hp ~ cyl + drat + am + gear + carb, data = mtcars)
+summary(univ.hp)
+univ.wt <- lm( wt ~ cyl + disp + drat + am + carb, data = mtcars)
+summary(univ.wt)
+univ.qsec <- lm( qsec ~ cyl + disp + drat + vs + am + gear, data = mtcars)
+summary(univ.qsec)
+univ.mpg <- lm(mpg ~ cyl + disp + am + carb , data = mtcars)
+summary(univ.mpg)
+#1. Các biến X_i có mối tương quan ntn với biến mpg?Xét xem hệ số tương quan. Mối tương quan mạnh hay yếu
+
+cor(mpg, cyl)
+# cor(mpg, cyl) = -0.852162 nên có thể nói mpg và cyl có tương quan tuyến tính mạnh
+cor(mpg, disp)
+# cor(mpg, disp) = -0.852162 nên có thể nói mpg và cyl có tương quan tuyến tính mạnh
+# Tương tự
+#2. Các biến X_i có ý nghĩa tác động ntn đến biến mpg? Xác định các biến có ý nghĩa trong mô hình
+# tức là hệ số tương ứng khác 0. sau đó xét xem sự tăng giảm của biến đó ảnh hưởng ntn trong mô hình
+summary(univ.mpg)$coef
+#Coefficients:
+#             Estimate Std. Error t value Pr(>|t|)    
+#(Intercept) 30.194293   2.594762  11.637    5e-12 ***
+#cyl         -0.657321   0.688998  -0.954  0.34854    
+#disp        -0.017969   0.009377  -1.916  0.06598 .  
+#am           3.598793   1.295464   2.778  0.00983 ** 
+#carb        -1.192082   0.389066  -3.064  0.00491 ** 
+#Các hệ số trong mô hình có thực sự khác 0 k?
+#Giả sử mô hình: mpg = a0 + a1*cyl + a2*disp + a3*am + a4*carb
+# Có 5 bài toán kiểm định hệ số: H0: a_i = 0 vs a_i != 0 (i = 0,1,2,3,4)
+# Do p-value tương ứng của a1, a2 > 0.05 nên chấp nhận H0. Có thể nói biến a1 và a2 = 0 hay biến cyl và disp ko có ý nghĩa trong mô hình
+# Với p-value < 0.05 thì 2 biến carb và am có ý nghĩa trong mô hình
+# Do a3_h = 3.599 nên khi am tăng thì mpg tăng
+# Do a4_h = -1.19 nên khi carb tăng thì mpg giảm
+
+#2'. Tìm ước lượng và KTC 90 % cho các hệ số trong mô hình thu đc
+univ.mpg$coefficients
+# UL: mpg = 30.194293 - 0.567321*cyl - 0.017969*disp + 3.598793*am - 1.192082*carb
+confint(univ.mpg, level = 0.90)
+# KTC 90% cho a0 là (25.77466396, 34.613921720) .....
+#3. Phát biểu bài toán kiểm định các hệ số trong mô hình và kết luận
+
+
+# 4. Kiểm định phần dư trong mô hình
+# H0: Phần dư tuân theo pp chuẩn vs H1: Phần dư ko tuân theo pp chuẩn
+shapiro.test(univ.mpg$residuals)
+# Với p-value = 0.5272 > 0.05 chưa đủ cơ sở để bác bỏ H0 nên Phần dư tuân theo pp chuẩn
+# H0: GTTB của phần dư bằng 0 vs H1: GTTB của phần dư khác 0
+t.test(univ.mpg$residuals)
+# Với p-value = 1 > 0.05 nên chấp nhận Ho nên GTTB của phần dư bằng 0
+
+# 5. Tìm hệ số xác định của mô hình. Giải thích ý nghĩa. Thực hiện ...
+summary(univ.mpg)
+#Coefficients:
+#             Estimate Std. Error t value Pr(>|t|)    
+#(Intercept) 30.194293   2.594762  11.637    5e-12 ***
+#cyl         -0.657321   0.688998  -0.954  0.34854    
+#disp        -0.017969   0.009377  -1.916  0.06598 .  
+#am           3.598793   1.295464   2.778  0.00983 ** 
+#carb        -1.192082   0.389066  -3.064  0.00491 ** 
+## Sai số chuẩn của phần dư là: 2.632
+## Hệ số xác định R2 = 0.8339, hệ số xác định R2 hiệu chỉnh = 0.8093
+## 80.93% sự biến thiên của mpg có thể được giải thích bởi các biến cyl, disp, am, carb
+## Test tống kê F = 33.89 với bậc tự do (4,27)
+##bài toán: H0: Mô hình nói chung k có ý nghĩa thống kê vs H1: Mô hình nói chung có ý nghĩa thống kê
+##  p-value: 3.662e-10 < 0.05 có đủ cơ sở để bác bỏ H0 nên Mô hình nói chung có ý nghĩa thống kê
+
+# 6. Lấy bất kì 1 bộ giá trị cho X đưa ra dự đoán cho mpg và khoẳng dự đoán 90% cho mpg
+predict(univ.mpg, newdata = data.frame(cyl= 6, disp= 400, am= 1, carb= 4), type='response')
+# Đưa ra dự đoán về mpg của 1 xe có các dữ liệu như trên
+# Dự đoán trên chính là dựa theo mô hình phù hợp đã xây dựng
+predict(univ.mpg, newdata = data.frame(cyl= 6, disp= 400, am= 1, carb= 4), interval = 'prediction', level = 0.90) # đưa ra khoảng dự đoán 90% về mpg khi xét 1 xe có các dữ liệu như trên
+
+# Phần dư
+car.res <- cbind( univ.mpg$residuals, univ.hp$residuals, univ.wt$residuals, univ.qsec$residuals)
+colnames(car.res)<- c("mpg_res", "hp_res", "wt_res", "qsec_res")
+car.res <- data.frame(car.res)
+print(car.res, digits=2)
+
+install.packages('mvnormtest')
+library(mvnormtest)
+mshapiro.test(t(car.res))
+# Bt: H0: phần dư tuân theo pp chuẩn vs H1: phần dư ko tuân theo pp chuẩn
+# Với p-value = 0.0002403 < 0.05 có đủ cơ sở để bác bỏ H0. Vậy phần dư ko tuân theo pp chuẩn
+
+mah <- mahalanobis(car.res, colMeans(car.res), var(car.res))
+outi <- match(max(mah),mah) # index of outlier
+mshapiro.test( t( car.res[-outi,] ))
+# sau khi loại bỏ outlier p-value = 0.02877 < 0.05 nên vầ bác bỏ H0 và phần dư ko tuân theo pp chuẩn
+
+print(prcomp(car.res, scale = TRUE), digits = 3) # Phân tích thành phần chính
+biplot(prcomp(car.res, scale = TRUE), cex = c(.6, 1.2),
+      col = c(3, 4), cex.lab=1.5,
+      xlab = "First principal component",
+      ylab = "Second principal component")
+
+
+
+
+
+
+
+
+
